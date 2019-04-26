@@ -5,12 +5,12 @@ public class DeltaRule {
 
     private static final int NEURON_INPUTS_NUMBER = 3;
     private static final int TRAINING_EPOCHS_NUMBER = 100;
-    private static final int TRAINING_PATTERNS_NUMBER = 1;
+    private static final int TRAINING_PATTERNS_NUMBER = 3;
 
     private static final double TRAINING_STEP = 0.05;
 
-    private static final double minIntervalWeights = -2;
-    private static final double maxIntervalWeights = 2;
+    private static final double minIntervalWeights = -10;
+    private static final double maxIntervalWeights = 10;
 
     private static final double minIntervalInputs = -2;
     private static final double maxIntervalInputs = 2;
@@ -21,6 +21,8 @@ public class DeltaRule {
     private double[][] inputs;
     private double[] weights;
     private double[] outputs;
+
+    private boolean learnSuccessful = false;
 
     public static void main(String[] args) {
         DeltaRule deltaRule = new DeltaRule();
@@ -64,25 +66,33 @@ public class DeltaRule {
 
     private void run() {
         for (int i = 0; i < TRAINING_EPOCHS_NUMBER; i++) {
-            System.out.println("***Beginning Epoch #" + (i + 1) + "***");
-
-            prepareEpoch();
+            if (learnSuccessful) {
+                break;
+            }
+            prepareEpoch(i);
         }
     }
 
-    private void prepareEpoch() {
+    private void prepareEpoch(int epochNumber) {
         for (int i = 0; i < TRAINING_PATTERNS_NUMBER; i++) {
-            presentPattern(i);
+            presentPattern(i, epochNumber);
         }
     }
 
-    private void presentPattern(int patternNumber) {
+    private void presentPattern(int patternNumber, int epochNumber) {
         double[] currentTrainingPattern = inputs[patternNumber];
-
-        System.out.println("Current Training Pattern" + Arrays.toString(currentTrainingPattern));
 
         double actualSum = sumElements(currentTrainingPattern);
         double error = calculateError(actualSum, outputs[patternNumber]);
+
+        if (error < 0.001 && error > -0.001) {
+            learnSuccessful = true;
+            return;
+        }
+
+        System.out.println("***Epoch #" + (epochNumber + 1) + "***" +
+                "Pattern #" + (patternNumber + 1));
+        System.out.println("Current Training Pattern" + Arrays.toString(currentTrainingPattern));
 
         for (int i = 0; i < weights.length; i++) {
             double delta = trainingFunction(currentTrainingPattern[i], error);
@@ -94,6 +104,7 @@ public class DeltaRule {
         System.out.println("error=" + error);
 
         System.out.println("Current Weights" + Arrays.toString(weights));
+
     }
 
     private double sumElements(double[] currentTrainingPattern) {
